@@ -200,7 +200,6 @@ function bdpwr_set_password($password, $user_id)
     global $wpdb;
 
     $hash = wp_hash_password($password);
-    var_dump($password, $hash);
     $wpdb->update(
         $wpdb->users,
         [
