@@ -91,7 +91,7 @@ class BDPWR_User extends WP_User {
 		}
 
 		$this->delete_user_meta( 'bdpws-password-reset-code' );
-		return wp_set_password( $password, $this->ID );
+		return bdpwr_set_password( $password, $this->ID );
 	}
 
 

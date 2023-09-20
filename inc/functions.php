@@ -195,6 +195,34 @@ function bdpwr_send_password_reset_code_email( $email = false, $code = false, $e
 }
 
 
+function bdpwr_set_password($password, $user_id)
+{
+    global $wpdb;
+
+    $hash = wp_hash_password($password);
+    var_dump($password, $hash);
+    $wpdb->update(
+        $wpdb->users,
+        [
+            'user_pass' => $hash,
+            'user_activation_key' => '',
+        ],
+        ['ID' => $user_id]
+    );
+
+    clean_user_cache($user_id);
+
+    /**
+     * Fires after the user password is set.
+     *
+     * @param string $password The plaintext password just set.
+     * @param int $user_id The ID of the user whose password was just set.
+     * @since 6.2.0
+     *
+     */
+    do_action('wp_set_password', $password, $user_id);
+}
+
 /**
 *
 * BACKWARDS COMPATIBILITY FILLS
