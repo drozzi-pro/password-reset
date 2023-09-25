@@ -114,7 +114,7 @@ class BDPWR_User extends WP_User
 
 		if (!$stored_details) {
 			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			throw new Exception(__('You must request a password reset code before you try to set a new password.', 'bdvs-password-reset'));
+			throw new NewCodeException(__('You must request a password reset code before you try to set a new password.', 'bdvs-password-reset'));
 		}
 
 		$stored_code = $stored_details['code'];

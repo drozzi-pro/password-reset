@@ -35,10 +35,10 @@ add_action(
 					try {
 						$user = bdpwr_get_user($exists);
 						$user->validate_code($data['code']);
-					} catch (Exception $e) {
-						return new WP_Error('bad_request', $e->getMessage(), array('status' => 500));
 					} catch (NewCodeException $e) {
 						return new WP_Error('new_code', $e->getMessage(), ['status' => 500]);
+					} catch (Exception $e) {
+						return new WP_Error('bad_request', $e->getMessage(), array('status' => 500));
 					}
 
 					return array(
