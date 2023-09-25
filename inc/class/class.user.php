@@ -149,10 +149,11 @@ class BDPWR_User extends WP_User
 				// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				$attempts_string = __('You have used the maximum number of attempts allowed. You must request a new code.', 'bdvs-password-reset');
 				$this->delete_user_meta('bdpws-password-reset-code');
+				throw new NewCodeException(__('The reset code provided is not valid. ', 'bdvs-password-reset') . $attempts_string);
 			}
 
 			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			throw new NewCodeException(__('The reset code provided is not valid. ', 'bdvs-password-reset') . $attempts_string);
+			throw new Exception(__('The reset code provided is not valid. ', 'bdvs-password-reset') . $attempts_string);
 		}
 
 		if ($code !== $stored_code) {
