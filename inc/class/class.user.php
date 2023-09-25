@@ -6,7 +6,8 @@
  * Class to handle user related actions
  **/
 
-class BDPWR_User extends WP_User {
+class BDPWR_User extends WP_User
+{
 
 
 	/**
@@ -17,14 +18,15 @@ class BDPWR_User extends WP_User {
 	 * @return $this
 	 **/
 
-	public function __construct( $user_id = false ) {
+	public function __construct($user_id = false)
+	{
 
-		if ( ! $user_id ) {
+		if (!$user_id) {
 			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			throw new Exception( __( 'You must provide a $user_id to initiate a BDPWR_User object.', 'bdvs-password-reset' ) );
+			throw new Exception(__('You must provide a $user_id to initiate a BDPWR_User object.', 'bdvs-password-reset'));
 		}
 
-		parent::__construct( $user_id );
+		parent::__construct($user_id);
 	}
 
 
@@ -36,24 +38,24 @@ class BDPWR_User extends WP_User {
 	 * @return bool true on success false on failure
 	 **/
 
-	public function send_reset_code() {
+	public function send_reset_code()
+	{
 
 		$allowed_roles = bdpwr_get_allowed_roles();
 		$allowed       = false;
 
-		foreach ( $allowed_roles as $role ) {
+		foreach ($allowed_roles as $role) {
 
-			if ( ! in_array( $role, (array) $this->roles ) ) {
+			if (!in_array($role, (array) $this->roles)) {
 				continue;
 			}
 
 			$allowed = true;
-
 		}
 
-		if ( ! $allowed ) {
+		if (!$allowed) {
 			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			throw new Exception( __( 'You cannot request a password reset for a user with this role.', 'bdvs-password-reset' ) );
+			throw new Exception(__('You cannot request a password reset for a user with this role.', 'bdvs-password-reset'));
 		}
 
 		$email      = $this->get_email_address();
@@ -69,7 +71,7 @@ class BDPWR_User extends WP_User {
 			)
 		);
 
-		return bdpwr_send_password_reset_code_email( $email, $code, $expiration );
+		return bdpwr_send_password_reset_code_email($email, $code, $expiration);
 	}
 
 
@@ -82,16 +84,17 @@ class BDPWR_User extends WP_User {
 	 * @return bool true on success, false on failure
 	 **/
 
-	public function set_new_password( $code, $password ) {
+	public function set_new_password($code, $password)
+	{
 
-		$code_valid = $this->validate_code( $code );
+		$code_valid = $this->validate_code($code);
 
-		if ( ! $code_valid ) {
-			throw new Exception( __( 'There was a problem validating the code.', 'bdvs-password-reset' ) );
+		if (!$code_valid) {
+			throw new Exception(__('There was a problem validating the code.', 'bdvs-password-reset'));
 		}
 
-		$this->delete_user_meta( 'bdpws-password-reset-code' );
-		return bdpwr_set_password( $password, $this->ID );
+		$this->delete_user_meta('bdpws-password-reset-code');
+		return bdpwr_set_password($password, $this->ID);
 	}
 
 
@@ -103,73 +106,73 @@ class BDPWR_User extends WP_User {
 	 * @return bool true on success, false on failure
 	 **/
 
-	public function validate_code( $code ) {
+	public function validate_code($code)
+	{
 
-		$now            = strtotime( 'now' );
-		$stored_details = $this->get_user_meta( 'bdpws-password-reset-code' );
+		$now            = strtotime('now');
+		$stored_details = $this->get_user_meta('bdpws-password-reset-code');
 
-		if ( ! $stored_details ) {
+		if (!$stored_details) {
 			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			throw new Exception( __( 'You must request a password reset code before you try to set a new password.', 'bdvs-password-reset' ) );
+			throw new Exception(__('You must request a password reset code before you try to set a new password.', 'bdvs-password-reset'));
 		}
 
 		$stored_code = $stored_details['code'];
 		$code_expiry = $stored_details['expiry'];
-		$attempt     = ( isset( $stored_details['attempt'] ) ) ? $stored_details['attempt'] : 0;
+		$attempt     = (isset($stored_details['attempt'])) ? $stored_details['attempt'] : 0;
 		++$attempt;
 		$attempts_string = '';
 
 		/**
-		*
-		* Filter the maximum attempts that can be made on a given code. Set to -1 for unlimmited.
-		*
-		* @param $attempts int the maximum number of failed attempts allowed before a code is invalidated
-		*/
+		 *
+		 * Filter the maximum attempts that can be made on a given code. Set to -1 for unlimmited.
+		 *
+		 * @param $attempts int the maximum number of failed attempts allowed before a code is invalidated
+		 */
 
-		$attempts_max = apply_filters( 'bdpwr_max_attempts', 3 );
+		$attempts_max = apply_filters('bdpwr_max_attempts', 3);
 
-		if ( $code !== $stored_code && $attempts_max !== -1 ) {
+		if ($code !== $stored_code && $attempts_max !== -1) {
 
 			$stored_details['attempt'] = $attempt;
 			$remaining_attempts        = $attempts_max - $attempt;
 
-			$this->save_user_meta( 'bdpws-password-reset-code', $stored_details );
+			$this->save_user_meta('bdpws-password-reset-code', $stored_details);
 
 			$attempts_string = sprintf(
-			/* translators: %s: Number of remaining attempts */
-				__( 'You have %s attempts remaining.', 'bdvs-password-reset' ),
+				/* translators: %s: Number of remaining attempts */
+				__('You have %s attempts remaining.', 'bdvs-password-reset'),
 				$remaining_attempts
 			);
 
-			if ( $remaining_attempts <= 0 ) {
+			if ($remaining_attempts <= 0) {
 				// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-				$attempts_string = __( 'You have used the maximum number of attempts allowed. You must request a new code.', 'bdvs-password-reset' );
-				$this->delete_user_meta( 'bdpws-password-reset-code' );
+				$attempts_string = __('You have used the maximum number of attempts allowed. You must request a new code.', 'bdvs-password-reset');
+				$this->delete_user_meta('bdpws-password-reset-code');
 			}
 
 			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			throw new Exception( __( 'The reset code provided is not valid. ', 'bdvs-password-reset' ) . $attempts_string );
-
+			throw new NewCodeException(__('The reset code provided is not valid. ', 'bdvs-password-reset') . $attempts_string);
 		}
 
-		if ( $code !== $stored_code ) {
+		if ($code !== $stored_code) {
 			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			throw new Exception( __( 'The reset code provided is not valid.', 'bdvs-password-reset' ) );
+			throw new Exception(__('The reset code provided is not valid.', 'bdvs-password-reset'));
 		}
 
 		$expired = true;
 
-		if ( $code_expiry === -1 ) {
+		if ($code_expiry === -1) {
 			$expired = false;
 		}
 
-		if ( $now > $code_expiry ) {
+		if ($now > $code_expiry) {
 			$expired = false;
 		}
 
-		if ( ! $expired ) {
-			$this->delete_user_meta( 'bdpws-password-reset-code' );
-			throw new Exception( __( 'The reset code provided has expired.', 'bdvs-password-reset' ) );
+		if (!$expired) {
+			$this->delete_user_meta('bdpws-password-reset-code');
+			throw new NewCodeException(__('The reset code provided has expired.', 'bdvs-password-reset'));
 		}
 
 		return true;
@@ -184,9 +187,10 @@ class BDPWR_User extends WP_User {
 	 * @param mixed str|bool the meta value or fale if it does not exist or has no value
 	 **/
 
-	private function get_user_meta( $key ) {
-		$value = get_user_meta( $this->ID, $key, true );
-		return ( $value !== '' ) ? $value : false;
+	private function get_user_meta($key)
+	{
+		$value = get_user_meta($this->ID, $key, true);
+		return ($value !== '') ? $value : false;
 	}
 
 
@@ -199,8 +203,9 @@ class BDPWR_User extends WP_User {
 	 * @return mixed int|bool the ID of the meta_value or false if it could not be saved
 	 **/
 
-	private function save_user_meta( $key, $value ) {
-		return update_user_meta( $this->ID, $key, $value );
+	private function save_user_meta($key, $value)
+	{
+		return update_user_meta($this->ID, $key, $value);
 	}
 
 
@@ -212,8 +217,9 @@ class BDPWR_User extends WP_User {
 	 * @return bool true on success false on failure
 	 **/
 
-	private function delete_user_meta( $key ) {
-		return delete_user_meta( $this->ID, $key );
+	private function delete_user_meta($key)
+	{
+		return delete_user_meta($this->ID, $key);
 	}
 
 
@@ -225,7 +231,8 @@ class BDPWR_User extends WP_User {
 	 * @return str the user's email address
 	 **/
 
-	private function get_email_address() {
+	private function get_email_address()
+	{
 		return $this->user_email;
 	}
 }
