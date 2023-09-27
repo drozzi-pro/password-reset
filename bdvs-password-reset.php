@@ -1,4 +1,5 @@
 <?php
+
 /**
  *
  * @wordpress-plugin
@@ -22,3 +23,7 @@
  **/
 
 require_once __DIR__ . '/inc/inc.php';
+
+add_action('init', function () {
+    load_plugin_textdomain('bdvs-password-reset', false, dirname(plugin_basename(__FILE__)) . '/languages/');
+});
